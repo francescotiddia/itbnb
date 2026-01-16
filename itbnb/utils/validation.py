@@ -1,13 +1,15 @@
-import numpy as np
-from scipy.sparse import csr_matrix, issparse
 import warnings
 from typing import Any
+
+import numpy as np
+from scipy.sparse import csr_matrix, issparse
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
 
 class DataConversionWarning(UserWarning):
     """Warning used to notify implicit data conversions."""
+
     pass
 
 
@@ -44,9 +46,11 @@ def encode_labels(y):
     y = np.asarray(y)
     classes = np.unique(y)
     if len(classes) != 2:
-        raise ValueError("y must contain exactly two classes" if len(classes) > 1
-                         else "y contains only one class"
-                         )
+        raise ValueError(
+            "y must contain exactly two classes"
+            if len(classes) > 1
+            else "y contains only one class"
+        )
     mapping = {cls: i for i, cls in enumerate(classes)}
     encoded = np.array([mapping[val] for val in y])
 
@@ -147,12 +151,13 @@ def check_priors(priors):
 
     return priors
 
+
 def check_x(
-        X: Any,
-        *,
-        expected_n_features=None,
-        dtype=np.int8,
-        allow_object=False,
+    X: Any,
+    *,
+    expected_n_features=None,
+    dtype=np.int8,
+    allow_object=False,
 ):
     """
     Validate and convert input feature matrix ``X`` for Tb-Naive Bayes.
@@ -195,7 +200,6 @@ def check_x(
     TypeError
         If X cannot be converted to a numeric array.
     """
-
 
     if issparse(X):
         X = X.tocsr()
@@ -309,7 +313,6 @@ def _validate_fit_inputs(estimator, X, y):
         If X is invalid, if y is not binary, or if shapes are inconsistent.
     """
 
-
     X = check_x(X)
 
     # allowing y to be None is mainly for sklearn compliance
@@ -332,25 +335,25 @@ def _validate_fit_inputs(estimator, X, y):
 
 def _validate_predict_inputs(estimator, X):
     """
-        Validate inputs for estimator.predict(X).
+    Validate inputs for estimator.predict(X).
 
-        Parameters
-        ----------
-        estimator : object
-            Fitted estimator.
-        X : array-like or sparse matrix
-            Input data.
+    Parameters
+    ----------
+    estimator : object
+        Fitted estimator.
+    X : array-like or sparse matrix
+        Input data.
 
-        Returns
-        -------
-        X_out : csr_matrix
-            Validated and transformed input matrix.
+    Returns
+    -------
+    X_out : csr_matrix
+        Validated and transformed input matrix.
 
-        Raises
-        ------
-        ValueError
-            If estimator is not fitted, X is invalid, or has wrong feature size.
-        """
+    Raises
+    ------
+    ValueError
+        If estimator is not fitted, X is invalid, or has wrong feature size.
+    """
 
     check_is_fitted(estimator)
 

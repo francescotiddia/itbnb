@@ -5,20 +5,22 @@ This module tests the core functionality, parameter validation, iterative
 refinement, and edge cases of the TbNB classifier.
 """
 
+import warnings
+
 import numpy as np
 import pytest
-import warnings
 from scipy.sparse import csr_matrix
 from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
 from sklearn.utils._testing import assert_allclose, assert_array_equal
-from itbnb import TbNB
 
+from itbnb import TbNB
 
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def binary_classification_data():
@@ -30,7 +32,7 @@ def binary_classification_data():
         n_redundant=5,
         n_classes=2,
         random_state=42,
-        flip_y=0.1
+        flip_y=0.1,
     )
     return train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -39,13 +41,13 @@ def binary_classification_data():
 def sparse_bow_data():
     """Generate sparse bag-of-words data."""
     corpus = [
-                 "great movie loved acting",
-                 "terrible film waste time",
-                 "excellent performance amazing",
-                 "boring predictable disappointing",
-                 "fantastic brilliant masterpiece",
-                 "awful horrible regret watching",
-             ] * 50  # Repeat for more samples
+        "great movie loved acting",
+        "terrible film waste time",
+        "excellent performance amazing",
+        "boring predictable disappointing",
+        "fantastic brilliant masterpiece",
+        "awful horrible regret watching",
+    ] * 50  # Repeat for more samples
 
     labels = [1, 0, 1, 0, 1, 0] * 50
 
@@ -67,6 +69,7 @@ def small_dataset():
 # ============================================================================
 # Basic Functionality Tests
 # ============================================================================
+
 
 def test_tbnb_initialization():
     """Test TbNB initialization with default parameters."""
@@ -163,6 +166,7 @@ def test_tbnb_sparse_input(sparse_bow_data):
 # Iterative Mode Tests
 # ============================================================================
 
+
 def test_tbnb_iterative_kde(binary_classification_data):
     """Test iterative refinement with KDE mode."""
     X_train, X_test, y_train, y_test = binary_classification_data
@@ -188,7 +192,7 @@ def test_tbnb_iterative_clt(binary_classification_data):
         mode="clt",
         s_iter=30,
         clt_n_boot=100,  # Reduced for speed
-        clt_sample_size=30
+        clt_sample_size=30,
     )
     clf.fit(X_train, y_train)
 
@@ -250,6 +254,7 @@ def test_predict_with_iterative_override(binary_classification_data):
 # Parameter Validation Tests
 # ============================================================================
 
+
 def test_invalid_criterion_raises_error(binary_classification_data):
     """Test that invalid criterion raises ValueError."""
     X_train, _, y_train, _ = binary_classification_data
@@ -306,6 +311,7 @@ def test_custom_threshold_prediction(binary_classification_data):
 # ============================================================================
 # Threshold Optimization Tests
 # ============================================================================
+
 
 def test_threshold_optimization_criteria(binary_classification_data):
     """Test different optimization criteria."""
@@ -372,6 +378,7 @@ def test_tau_grid_types(binary_classification_data):
 # Prior and Smoothing Tests
 # ============================================================================
 
+
 def test_fit_prior_true(binary_classification_data):
     """Test with fit_prior=True."""
     X_train, _, y_train, _ = binary_classification_data
@@ -415,6 +422,7 @@ def test_different_alpha_values(binary_classification_data):
 # Edge Cases and Robustness Tests
 # ============================================================================
 
+
 def test_small_dataset(small_dataset):
     """Test TbNB on very small dataset."""
     X, y = small_dataset
@@ -427,11 +435,7 @@ def test_small_dataset(small_dataset):
 def test_balanced_vs_imbalanced_data():
     """Test TbNB on imbalanced dataset."""
     X, y = make_classification(
-        n_samples=400,
-        n_features=10,
-        n_classes=2,
-        weights=[0.9, 0.1],
-        random_state=42
+        n_samples=400, n_features=10, n_classes=2, weights=[0.9, 0.1], random_state=42
     )
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -498,6 +502,7 @@ def test_all_same_class():
 # Properties and Attributes Tests
 # ============================================================================
 
+
 def test_lw_properties(binary_classification_data):
     """Test lw_present_ and lw_absent_ properties."""
     X_train, _, y_train, _ = binary_classification_data
@@ -510,12 +515,8 @@ def test_lw_properties(binary_classification_data):
     assert clf.lw_absent_.shape == (X_train.shape[1],)
 
     # Check they're computed correctly
-    expected_lw_pres = (
-            clf.log_conditional_pres_[1] - clf.log_conditional_pres_[0]
-    )
-    expected_lw_abs = (
-            clf.log_conditional_abs_[1] - clf.log_conditional_abs_[0]
-    )
+    expected_lw_pres = clf.log_conditional_pres_[1] - clf.log_conditional_pres_[0]
+    expected_lw_abs = clf.log_conditional_abs_[1] - clf.log_conditional_abs_[0]
 
     assert_allclose(clf.lw_present_, expected_lw_pres)
     assert_allclose(clf.lw_absent_, expected_lw_abs)
@@ -534,6 +535,7 @@ def test_sklearn_tags():
 # ============================================================================
 # Serialization Tests
 # ============================================================================
+
 
 def test_save_and_load_model(binary_classification_data, tmp_path):
     """Test model serialization and deserialization."""
@@ -564,6 +566,7 @@ def test_save_and_load_model(binary_classification_data, tmp_path):
 # Integration Tests
 # ============================================================================
 
+
 def test_pipeline_compatibility(binary_classification_data):
     """Test TbNB in sklearn pipeline."""
     from sklearn.pipeline import Pipeline
@@ -571,10 +574,7 @@ def test_pipeline_compatibility(binary_classification_data):
 
     X_train, X_test, y_train, _ = binary_classification_data
 
-    pipe = Pipeline([
-        ("scaler", StandardScaler()),
-        ("classifier", TbNB())
-    ])
+    pipe = Pipeline([("scaler", StandardScaler()), ("classifier", TbNB())])
 
     pipe.fit(X_train, y_train)
     y_pred = pipe.predict(X_test)
@@ -599,13 +599,11 @@ def test_cross_validation_compatibility(binary_classification_data):
 # CLT-specific Tests
 # ============================================================================
 
+
 def test_clt_bootstrap_parameters():
     """Test CLT mode with different bootstrap parameters."""
     X, y = make_classification(
-        n_samples=500,
-        n_features=20,
-        n_informative=15,
-        random_state=42
+        n_samples=500, n_features=20, n_informative=15, random_state=42
     )
 
     # Test with different n_boot values
@@ -622,11 +620,7 @@ def test_clt_bootstrap_parameters():
 
 def test_clt_sample_size_constraint():
     """Test that CLT respects minimum sample size."""
-    X, y = make_classification(
-        n_samples=200,
-        n_features=10,
-        random_state=42
-    )
+    X, y = make_classification(n_samples=200, n_features=10, random_state=42)
 
     # With s_iter=30 and mode="clt", needs 30 samples per class in window
     clf = TbNB(
@@ -634,7 +628,7 @@ def test_clt_sample_size_constraint():
         mode="clt",
         s_iter=30,
         clt_sample_size=30,
-        p_iter=0.1  # Small window
+        p_iter=0.1,  # Small window
     )
     clf.fit(X, y)
 

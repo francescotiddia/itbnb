@@ -1,10 +1,11 @@
-from math import sqrt
 import numpy as np
 
 
 def _safe_div(n, d):
     """Safe division: returns 0 if denominator is 0."""
-    return np.divide(n, d, out=np.zeros_like(np.asarray(n, dtype=float)), where=(d != 0))
+    return np.divide(
+        n, d, out=np.zeros_like(np.asarray(n, dtype=float)), where=(d != 0)
+    )
 
 
 def fpr(fp, tn):
@@ -69,15 +70,15 @@ def acc(tp, fp, tn, fn):
 def all_metrics_single(tp, fp, tn, fn):
     """Compute common binary classification metrics"""
     return {
-        'precision': precision(tp, fp),
-        'recall': tpr(tp, fn),
-        'specificity': tnr(tn, fp),
-        'fpr': fpr(fp, tn),
-        'f1': f1_score(tp, fp, fn),
-        'mcc': mcc(tp, fp, tn, fn),
-        'misclassification_error': me(tp, fp, tn, fn),
-        'fnr': fnr(tp, fn),
-        'accuracy': acc(tp, fp, tn, fn)
+        "precision": precision(tp, fp),
+        "recall": tpr(tp, fn),
+        "specificity": tnr(tn, fp),
+        "fpr": fpr(fp, tn),
+        "f1": f1_score(tp, fp, fn),
+        "mcc": mcc(tp, fp, tn, fn),
+        "misclassification_error": me(tp, fp, tn, fn),
+        "fnr": fnr(tp, fn),
+        "accuracy": acc(tp, fp, tn, fn),
     }
 
 
@@ -99,9 +100,15 @@ def all_metrics(tp, fp, tn, fn):
     fpr = np.divide(fp, tn_fp, out=np.zeros_like(tp), where=tn_fp != 0)
     fnr = np.divide(fn, tp_fn, out=np.zeros_like(tp), where=tp_fn != 0)
     accuracy = np.divide(tp + tn, total, out=np.zeros_like(tp), where=total != 0)
-    misclassification_error = np.divide(fp + fn, total, out=np.zeros_like(tp), where=total != 0)
-    f1 = np.divide(2 * precision * recall, precision + recall,
-                   out=np.zeros_like(tp), where=(precision + recall) != 0)
+    misclassification_error = np.divide(
+        fp + fn, total, out=np.zeros_like(tp), where=total != 0
+    )
+    f1 = np.divide(
+        2 * precision * recall,
+        precision + recall,
+        out=np.zeros_like(tp),
+        where=(precision + recall) != 0,
+    )
 
     num = tp * tn - fp * fn
     den = tp_fp * tp_fn * tn_fp * (tn + fn)

@@ -5,7 +5,6 @@ from itbnb import TbNB, ThresholdOptimizer
 
 
 def test_threshold_optimizer_fit():
-
     X, y = make_classification(
         n_samples=80,
         n_features=10,

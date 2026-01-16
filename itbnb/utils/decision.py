@@ -1,7 +1,8 @@
-import numpy as np
-from scipy.stats import gaussian_kde, norm
 from dataclasses import dataclass
+
+import numpy as np
 from scipy import optimize
+from scipy.stats import gaussian_kde, norm
 
 
 @dataclass
@@ -52,15 +53,11 @@ def _intersect_threshold(scores_pos, scores_neg):
         raise InterruptedError from e
 
     x_max_pos = optimize.minimize_scalar(
-        lambda x: -f_pos(x),
-        bounds=(low, high),
-        method="bounded"
+        lambda x: -f_pos(x), bounds=(low, high), method="bounded"
     ).x
 
     x_max_neg = optimize.minimize_scalar(
-        lambda x: -f_neg(x),
-        bounds=(low, high),
-        method="bounded"
+        lambda x: -f_neg(x), bounds=(low, high), method="bounded"
     ).x
 
     return tau, x_max_pos, x_max_neg
@@ -68,21 +65,21 @@ def _intersect_threshold(scores_pos, scores_neg):
 
 def predict_from_decisions(X, decisions, default_threshold=0.0):
     """
-        Generate class predictions using a sequence of refined decision rules.
+    Generate class predictions using a sequence of refined decision rules.
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples,)
-            Decision scores to classify.
-        decisions : list of Decision
-            Sequence of iterative threshold refinement steps.
-        default_threshold : float, default=0.0
-            Base threshold used for classification outside any refined regions.
+    Parameters
+    ----------
+    X : array-like of shape (n_samples,)
+        Decision scores to classify.
+    decisions : list of Decision
+        Sequence of iterative threshold refinement steps.
+    default_threshold : float, default=0.0
+        Base threshold used for classification outside any refined regions.
 
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            Predicted class labels (0 or 1) after applying all iterative decisions.
+    Returns
+    -------
+    y_pred : ndarray of shape (n_samples,)
+        Predicted class labels (0 or 1) after applying all iterative decisions.
     """
 
     X = np.asarray(X)
@@ -108,51 +105,51 @@ def predict_from_decisions(X, decisions, default_threshold=0.0):
 
 def _intersect_threshold_clt(scores_pos, scores_neg, n_boot=200, eps=1e-12):
     """
-        Estimate the intersection threshold between two class score distributions
-        using a Central Limit Theorem (CLT) approximation.
+    Estimate the intersection threshold between two class score distributions
+    using a Central Limit Theorem (CLT) approximation.
 
-        The method approximates the distributions of class-specific scores by
-        Normal densities obtained from bootstrap sample means. For each class,
-        repeated bootstrap samples are drawn and their means are used to estimate
-        the parameters of a Normal distribution, as motivated by the Central Limit
-        Theorem. The refined threshold is then computed as the intersection point
-        of the two Normal density functions.
+    The method approximates the distributions of class-specific scores by
+    Normal densities obtained from bootstrap sample means. For each class,
+    repeated bootstrap samples are drawn and their means are used to estimate
+    the parameters of a Normal distribution, as motivated by the Central Limit
+    Theorem. The refined threshold is then computed as the intersection point
+    of the two Normal density functions.
 
-        Parameters
-        ----------
-        scores_pos : array-like of shape (n_pos,)
-            Decision scores associated with positive class instances.
+    Parameters
+    ----------
+    scores_pos : array-like of shape (n_pos,)
+        Decision scores associated with positive class instances.
 
-        scores_neg : array-like of shape (n_neg,)
-            Decision scores associated with negative class instances.
+    scores_neg : array-like of shape (n_neg,)
+        Decision scores associated with negative class instances.
 
-        n_boot : int, default=200
-            Number of bootstrap resamples used to estimate the distribution
-            of the sample means.
+    n_boot : int, default=200
+        Number of bootstrap resamples used to estimate the distribution
+        of the sample means.
 
 
-        eps : float, default=1e-12
-            Small positive constant used to prevent degenerate standard deviations.
+    eps : float, default=1e-12
+        Small positive constant used to prevent degenerate standard deviations.
 
-        Returns
-        -------
-        tau : float
-            Estimated intersection point of the two Normal density functions,
-            representing the refined decision threshold.
+    Returns
+    -------
+    tau : float
+        Estimated intersection point of the two Normal density functions,
+        representing the refined decision threshold.
 
-        x_max_pos : float
-            Location of the maximum of the positive class density, corresponding
-            to the estimated mean of the positive class distribution.
+    x_max_pos : float
+        Location of the maximum of the positive class density, corresponding
+        to the estimated mean of the positive class distribution.
 
-        x_max_neg : float
-            Location of the maximum of the negative class density, corresponding
-            to the estimated mean of the negative class distribution.
+    x_max_neg : float
+        Location of the maximum of the negative class density, corresponding
+        to the estimated mean of the negative class distribution.
 
-        Raises
-        ------
-        InterruptedError
-            If the two Normal densities do not intersect within the range of the
-            observed scores.
+    Raises
+    ------
+    InterruptedError
+        If the two Normal densities do not intersect within the range of the
+        observed scores.
     """
 
     sample_size_pos = len(scores_pos)
@@ -162,12 +159,12 @@ def _intersect_threshold_clt(scores_pos, scores_neg, n_boot=200, eps=1e-12):
     neg_means = []
 
     for _ in range(n_boot):
-        pos_means.append(np.mean(
-            np.random.choice(scores_pos, size=sample_size_pos, replace=True)
-        ))
-        neg_means.append(np.mean(
-            np.random.choice(scores_neg, size=sample_size_neg, replace=True)
-        ))
+        pos_means.append(
+            np.mean(np.random.choice(scores_pos, size=sample_size_pos, replace=True))
+        )
+        neg_means.append(
+            np.mean(np.random.choice(scores_neg, size=sample_size_neg, replace=True))
+        )
 
     mu_pos, sigma_pos = np.mean(pos_means), max(np.std(pos_means), eps)
     mu_neg, sigma_neg = np.mean(neg_means), max(np.std(neg_means), eps)
@@ -187,8 +184,8 @@ def _intersect_threshold_clt(scores_pos, scores_neg, n_boot=200, eps=1e-12):
 
 
 def iterate_threshold(
-        X, Y, tau, p=0.2, s=20, i=0, epsilon=1e-3,
-        mode="kde", clt_boot=500, clt_sample=30):
+    X, Y, tau, p=0.2, s=20, i=0, epsilon=1e-3, mode="kde", clt_boot=500, clt_sample=30
+):
     """
     Perform iterative local refinement of the decision threshold around
     regions of classification uncertainty.
@@ -316,14 +313,12 @@ def iterate_threshold(
         neg_in_win = omega_x[omega_y == 0]
 
         if mode == "kde":
-
             if len(omega_x) < s:
                 break
 
             if len(pos_in_win) < 2 or len(neg_in_win) < 2:
                 break
         elif mode == "clt":
-
             if len(pos_in_win) < s or len(neg_in_win) < s:
                 break
         else:
@@ -335,15 +330,11 @@ def iterate_threshold(
                 )
             else:
                 tau_new, x_max_pos, x_max_neg = _intersect_threshold_clt(
-                    pos_in_win, neg_in_win,
-                    n_boot=clt_boot,
-                    sample_size=clt_sample
+                    pos_in_win, neg_in_win, n_boot=clt_boot, sample_size=clt_sample
                 )
         except InterruptedError:
-
             break
         except Exception:
-
             break
 
         # Check if modes are distinguishable
@@ -351,7 +342,6 @@ def iterate_threshold(
             break
 
         direction = "r" if x_max_pos > x_max_neg else "l"
-
 
         decisions.append(
             Decision(
@@ -361,7 +351,7 @@ def iterate_threshold(
                 tau=tau_new,
                 x_max_pos=x_max_pos,
                 x_max_neg=x_max_neg,
-                direction=direction
+                direction=direction,
             )
         )
 

@@ -1,15 +1,20 @@
 import pickle
 import warnings
-import numpy as np
 
+import numpy as np
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 from .threshold import ThresholdOptimizer
-from .utils.decision import *
+from .utils.decision import (
+    Decision,
+    iterate_threshold,
+    predict_from_decisions,
+)
+
 from .utils.validation import (
-    _validate_predict_inputs,
     _validate_fit_inputs,
+    _validate_predict_inputs,
     check_priors,
 )
 
@@ -137,16 +142,18 @@ class TbNB(ClassifierMixin, BaseEstimator):
     https://doi.org/10.1007/s10260-023-00721-1
     """
 
-    AVAILABLE_CRITERIA = ['precision',
-                          'recall',
-                          'specificity',
-                          'fpr',
-                          'f1',
-                          'mcc',
-                          'misclassification_error',
-                          'fnr',
-                          'accuracy',
-                          'balanced_error']
+    AVAILABLE_CRITERIA = [
+        "precision",
+        "recall",
+        "specificity",
+        "fpr",
+        "f1",
+        "mcc",
+        "misclassification_error",
+        "fnr",
+        "accuracy",
+        "balanced_error",
+    ]
 
     def __init__(
         self,
@@ -164,7 +171,7 @@ class TbNB(ClassifierMixin, BaseEstimator):
         s_iter=20,
         mode="kde",
         clt_n_boot=500,
-        clt_sample_size=30
+        clt_sample_size=30,
     ):
         self.fit_prior = fit_prior
         self.class_prior = class_prior
@@ -193,7 +200,9 @@ class TbNB(ClassifierMixin, BaseEstimator):
 
     def best_tau(self, metric):
         if not hasattr(self, "optimizer_"):
-            raise RuntimeError("Threshold has not been optimized yet. Call fit(..., optimize_threshold=True).")
+            raise RuntimeError(
+                "Threshold has not been optimized yet. Call fit(..., optimize_threshold=True)."
+            )
         return self.optimizer_.best_tau_[metric]
 
     @property
@@ -275,8 +284,12 @@ class TbNB(ClassifierMixin, BaseEstimator):
         pres_counts = feature_counts
         abs_counts = self.class_occurrences_[:, None] - feature_counts
 
-        pres_likelihood = (pres_counts + alpha) / (self.class_occurrences_[:, None] + 2 * alpha)
-        abs_likelihood = (abs_counts + alpha) / (self.class_occurrences_[:, None] + 2 * alpha)
+        pres_likelihood = (pres_counts + alpha) / (
+            self.class_occurrences_[:, None] + 2 * alpha
+        )
+        abs_likelihood = (abs_counts + alpha) / (
+            self.class_occurrences_[:, None] + 2 * alpha
+        )
 
         log_likelihood_pres = np.log(pres_likelihood)
         log_likelihood_abs = np.log(abs_likelihood)
@@ -327,8 +340,9 @@ class TbNB(ClassifierMixin, BaseEstimator):
             self.class_prior_ = self.class_prior
 
         self.feature_counts_ = self._estimate_feature_counts(X, Y)
-        self.log_conditional_pres_, self.log_conditional_abs_ = \
+        self.log_conditional_pres_, self.log_conditional_abs_ = (
             self._estimate_log_conditional_probabilities(self.feature_counts_, alpha)
+        )
 
         scores = self.decision_function(X)
 
@@ -340,7 +354,9 @@ class TbNB(ClassifierMixin, BaseEstimator):
         elif isinstance(self.tau_grid, (list, np.ndarray)):
             tau_grid = np.sort(np.asarray(self.tau_grid))
         else:
-            raise ValueError("tau_grid must be 'observed', a (low, high) tuple, or array-like.")
+            raise ValueError(
+                "tau_grid must be 'observed', a (low, high) tuple, or array-like."
+            )
 
         if self.optimize_threshold:
             optimizer = ThresholdOptimizer(
@@ -375,7 +391,7 @@ class TbNB(ClassifierMixin, BaseEstimator):
                 s=self.s_iter,
                 mode=self.mode,
                 clt_boot=self.clt_n_boot,
-                clt_sample=self.clt_sample_size
+                clt_sample=self.clt_sample_size,
             )
 
         return self
@@ -472,8 +488,10 @@ class TbNB(ClassifierMixin, BaseEstimator):
 
         tau = threshold if threshold is not None else getattr(self, "threshold_", None)
         if tau is None:
-            raise ValueError("No threshold available. Fit the model with optimize_threshold=True"
-                             " or provide a threshold explicitly.")
+            raise ValueError(
+                "No threshold available. Fit the model with optimize_threshold=True"
+                " or provide a threshold explicitly."
+            )
 
         pred = (scores >= tau).astype(int)
 
@@ -484,5 +502,7 @@ class TbNB(ClassifierMixin, BaseEstimator):
             warnings.warn("Iterative mode enabled but no decisions_ found.")
             return self.classes_[pred]
 
-        pred_int = predict_from_decisions(scores, self.decisions_, default_threshold=tau)
+        pred_int = predict_from_decisions(
+            scores, self.decisions_, default_threshold=tau
+        )
         return self.classes_[pred_int]
