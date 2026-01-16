@@ -6,12 +6,7 @@ from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 from .threshold import ThresholdOptimizer
-from .utils.decision import (
-    Decision,
-    iterate_threshold,
-    predict_from_decisions,
-)
-
+from .utils.decision import iterate_threshold, predict_from_decisions
 from .utils.validation import (
     _validate_fit_inputs,
     _validate_predict_inputs,
@@ -84,8 +79,10 @@ class TbNB(ClassifierMixin, BaseEstimator):
     mode : {"kde", "clt"}, default="kde"
         Method used to estimate class score densities within the uncertainty
         region during iterative refinement:
-        - "kde": Gaussian kernel density estimation (non-parametric, works with fewer samples)
-        - "clt": Normal approximation via Central Limit Theorem (parametric, more stable, requires more data)
+        - "kde": Gaussian kernel density estimation (non-parametric,
+        works with fewer samples)
+        - "clt": Normal approximation via Central Limit Theorem (parametric,
+         more stable, requires more data)
 
     clt_n_boot : int, default=500
         Number of bootstrap resamples used when ``mode="clt"``.
@@ -156,22 +153,22 @@ class TbNB(ClassifierMixin, BaseEstimator):
     ]
 
     def __init__(
-        self,
-        fit_prior=True,
-        class_prior=None,
-        alpha=1,
-        iterative=False,
-        optimize_threshold=True,
-        criterion="balanced_error",
-        tau_grid="observed",
-        K=5,
-        n_tau=50,
-        random_state=42,
-        p_iter=0.2,
-        s_iter=20,
-        mode="kde",
-        clt_n_boot=500,
-        clt_sample_size=30,
+            self,
+            fit_prior=True,
+            class_prior=None,
+            alpha=1,
+            iterative=False,
+            optimize_threshold=True,
+            criterion="balanced_error",
+            tau_grid="observed",
+            K=5,
+            n_tau=50,
+            random_state=42,
+            p_iter=0.2,
+            s_iter=20,
+            mode="kde",
+            clt_n_boot=500,
+            clt_sample_size=30,
     ):
         self.fit_prior = fit_prior
         self.class_prior = class_prior
@@ -201,7 +198,8 @@ class TbNB(ClassifierMixin, BaseEstimator):
     def best_tau(self, metric):
         if not hasattr(self, "optimizer_"):
             raise RuntimeError(
-                "Threshold has not been optimized yet. Call fit(..., optimize_threshold=True)."
+                "Threshold has not been optimized yet. Call fit(..., "
+                "optimize_threshold=True)."
             )
         return self.optimizer_.best_tau_[metric]
 
@@ -285,10 +283,10 @@ class TbNB(ClassifierMixin, BaseEstimator):
         abs_counts = self.class_occurrences_[:, None] - feature_counts
 
         pres_likelihood = (pres_counts + alpha) / (
-            self.class_occurrences_[:, None] + 2 * alpha
+                self.class_occurrences_[:, None] + 2 * alpha
         )
         abs_likelihood = (abs_counts + alpha) / (
-            self.class_occurrences_[:, None] + 2 * alpha
+                self.class_occurrences_[:, None] + 2 * alpha
         )
 
         log_likelihood_pres = np.log(pres_likelihood)

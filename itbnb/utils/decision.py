@@ -236,8 +236,10 @@ def iterate_threshold(
     mode : {"kde", "clt"}, default="kde"
         Method used to estimate class score densities within the uncertainty
         region:
-        - "kde": Gaussian kernel density estimation (non-parametric, works with fewer samples)
-        - "clt": Normal approximation via Central Limit Theorem (parametric, more stable, requires more data per class)
+        - "kde": Gaussian kernel density estimation
+        (non-parametric, works with fewer samples)
+        - "clt": Normal approximation via Central Limit Theorem
+        (parametric, more stable, requires more data per class)
 
     clt_boot : int, default=500
         Number of bootstrap resamples used when ``mode="clt"``.

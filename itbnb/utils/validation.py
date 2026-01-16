@@ -209,11 +209,13 @@ def check_x(
 
         if X.shape[0] == 0:
             raise ValueError(
-                f"Found array with 0 sample(s) (shape={X.shape}) while a minimum of 1 is required."
+                f"Found array with 0 sample(s) (shape={X.shape}) "
+                f"while a minimum of 1 is required."
             )
         if X.shape[1] == 0:
             raise ValueError(
-                f"Found array with 0 feature(s) (shape={X.shape}) while a minimum of 1 is required."
+                f"Found array with 0 feature(s) (shape={X.shape})"
+                f" while a minimum of 1 is required."
             )
 
         if not np.all(np.isfinite(X.data)):
@@ -236,7 +238,8 @@ def check_x(
     if X.ndim == 1 or X.ndim == 0:
         raise ValueError(
             "Expected 2D array, got 1D array instead. "
-            "Reshape your data either using array.reshape(-1, 1) if your data has a single feature "
+            "Reshape your data either using array.reshape(-1, 1) "
+            "if your data has a single feature "
             "or array.reshape(1, -1) if it contains a single sample."
         )
 
@@ -245,11 +248,13 @@ def check_x(
 
     if X.shape[0] == 0:
         raise ValueError(
-            f"Found array with 0 sample(s) (shape={X.shape}) while a minimum of 1 is required."
+            f"Found array with 0 sample(s) (shape={X.shape}) "
+            f"while a minimum of 1 is required."
         )
     if X.shape[1] == 0:
         raise ValueError(
-            f"Found array with 0 feature(s) (shape={X.shape}) while a minimum of 1 is required."
+            f"Found array with 0 feature(s) (shape={X.shape}) "
+            f"while a minimum of 1 is required."
         )
 
     if np.iscomplexobj(X):
@@ -325,7 +330,8 @@ def _validate_fit_inputs(estimator, X, y):
     y_type = type_of_target(y, input_name="y", raise_unknown=True)
     if y_type != "binary":
         raise ValueError(
-            f"Only binary classification is supported. The type of the target is {y_type}."
+            f"Only binary classification is supported."
+            f" The type of the target is {y_type}."
         )
 
     y, classes = check_y(y, return_classes=True)

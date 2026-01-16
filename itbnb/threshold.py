@@ -11,11 +11,13 @@ from .utils.validation import check_y
 
 class ThresholdOptimizer(BaseEstimator):
     """
-     Cross-validated threshold optimizer for the Threshold-based Naïve Bayes (Tb-NB) classifier.
+     Cross-validated threshold optimizer for the Threshold-based Naïve Bayes (Tb-NB)
+     classifier.
 
      The `ThresholdOptimizer` class estimates the optimal decision threshold (τ)
-     that minimizes or maximizes a relevant metric. It can be applied to any estimator implementing
-     a `fit(X, y)` and `decision_function(X)` interface.
+     that minimizes or maximizes a relevant metric.
+     It can be applied to any estimator implementing a `fit(X, y)`
+      and `decision_function(X)` interface.
 
     Parameters
      ----------
@@ -225,8 +227,10 @@ class ThresholdOptimizer(BaseEstimator):
                 if proba.ndim == 2:
                     if proba.shape[1] != 2:
                         raise ValueError(
-                            f"predict_proba must return an array of shape (n_samples, 2) "
-                            f"for binary classification, but got shape {proba.shape}"
+                            f"predict_proba must return an array"
+                            f" of shape (n_samples, 2)"
+                            f"for binary classification, but got shape "
+                            f"{proba.shape}"
                         )
                     return proba[:, 1]
                 elif proba.ndim == 1:
@@ -234,7 +238,8 @@ class ThresholdOptimizer(BaseEstimator):
 
                 else:
                     raise ValueError(
-                        f"predict_proba returned an array with invalid shape {proba.shape}"
+                        f"predict_proba returned an array with invalid shape "
+                        f"{proba.shape}"
                     )
             except Exception:
                 pass
@@ -308,7 +313,8 @@ class ThresholdOptimizer(BaseEstimator):
             Validated ``fit_params`` dictionary.
 
         tau_grid : ndarray
-            Sorted threshold grid. Defaults to ``np.arange(-3, 3, 0.1)`` if none was provided.
+            Sorted threshold grid. Defaults to ``np.arange(-3, 3, 0.1)``
+            if none was provided.
 
         Raises
         ------
