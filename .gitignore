@@ -77,3 +77,4 @@ target/
 # auto-generated files
 itbnb/_version.py
 
+.idea/
