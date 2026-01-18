@@ -137,4 +137,4 @@ Romano, M., Zammarchi, G., & Conversano, C. (2024).
 Statistical Methods & Applications, 33, 235–265.
 [https://doi.org/10.1007/s10260-023-00721-1](https://doi.org/10.1007/s10260-023-00721-1)
 
-```
+
