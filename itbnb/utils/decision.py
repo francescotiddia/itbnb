@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-
 import numpy as np
 from scipy import optimize
 from scipy.stats import gaussian_kde, norm
@@ -18,46 +17,52 @@ class Decision:
 
 def _intersect_threshold(scores_pos, scores_neg):
     """
-    Estimate the intersection point (new threshold) between two class densities.
+        Estimate the intersection point (new threshold) between two class densities.
 
-    Parameters
-    ----------
-    scores_pos : array-like of shape (n_pos,)
-        Scores associated with positive class instances.
-    scores_neg : array-like of shape (n_neg,)
-        Scores associated with negative class instances.
+        Parameters
+        ----------
+        scores_pos : array-like of shape (n_pos,)
+            Scores associated with positive class instances.
+        scores_neg : array-like of shape (n_neg,)
+            Scores associated with negative class instances.
 
-    Returns
-    -------
-    tau : float
-        Intersection point of the two class densities (refined threshold).
-    x_max_pos : float
-        Score corresponding to the argmax of the positive class density.
-    x_max_neg : float
-        Score corresponding to the argmax of the negative class density.
+        Returns
+        -------
+        tau : float
+            Intersection point of the two class densities (refined threshold).
+        x_max_pos : float
+            Score corresponding to the argmax of the positive class density.
+        x_max_neg : float
+            Score corresponding to the argmax of the negative class density.
 
-    Raises
-    ------
-    InterruptedError
-    If the two densities do not intersect (no sign change in their difference).
-    """
+        Raises
+        ------
+        InterruptedError
+        If the two densities do not intersect (no sign change in their difference).
+        """
     f_pos = gaussian_kde(scores_pos)
     f_neg = gaussian_kde(scores_neg)
 
     low = min(scores_pos.min(), scores_neg.min())
     high = max(scores_pos.max(), scores_neg.max())
 
+    g = lambda x: (f_pos(x) - f_neg(x)).item()
+
     try:
-        tau = optimize.brentq(lambda x: f_pos(x) - f_neg(x), low, high)
+        tau = optimize.brentq(g, low, high)
     except Exception as e:
         raise InterruptedError from e
 
     x_max_pos = optimize.minimize_scalar(
-        lambda x: -f_pos(x), bounds=(low, high), method="bounded"
+        lambda x: -f_pos(x).item(),
+        bounds=(low, high),
+        method="bounded"
     ).x
 
     x_max_neg = optimize.minimize_scalar(
-        lambda x: -f_neg(x), bounds=(low, high), method="bounded"
+        lambda x: -f_neg(x).item(),
+        bounds=(low, high),
+        method="bounded"
     ).x
 
     return tau, x_max_pos, x_max_neg
@@ -103,68 +108,14 @@ def predict_from_decisions(X, decisions, default_threshold=0.0):
     return y_pred
 
 
-def _intersect_threshold_clt(scores_pos, scores_neg, n_boot=200, eps=1e-12):
-    """
-    Estimate the intersection threshold between two class score distributions
-    using a Central Limit Theorem (CLT) approximation.
-
-    The method approximates the distributions of class-specific scores by
-    Normal densities obtained from bootstrap sample means. For each class,
-    repeated bootstrap samples are drawn and their means are used to estimate
-    the parameters of a Normal distribution, as motivated by the Central Limit
-    Theorem. The refined threshold is then computed as the intersection point
-    of the two Normal density functions.
-
-    Parameters
-    ----------
-    scores_pos : array-like of shape (n_pos,)
-        Decision scores associated with positive class instances.
-
-    scores_neg : array-like of shape (n_neg,)
-        Decision scores associated with negative class instances.
-
-    n_boot : int, default=200
-        Number of bootstrap resamples used to estimate the distribution
-        of the sample means.
-
-
-    eps : float, default=1e-12
-        Small positive constant used to prevent degenerate standard deviations.
-
-    Returns
-    -------
-    tau : float
-        Estimated intersection point of the two Normal density functions,
-        representing the refined decision threshold.
-
-    x_max_pos : float
-        Location of the maximum of the positive class density, corresponding
-        to the estimated mean of the positive class distribution.
-
-    x_max_neg : float
-        Location of the maximum of the negative class density, corresponding
-        to the estimated mean of the negative class distribution.
-
-    Raises
-    ------
-    InterruptedError
-        If the two Normal densities do not intersect within the range of the
-        observed scores.
-    """
-
-    sample_size_pos = len(scores_pos)
-    sample_size_neg = len(scores_neg)
-
+def _intersect_threshold_clt(scores_pos, scores_neg,
+                             n_boot=200, sample_size=30, eps=1e-12):
     pos_means = []
     neg_means = []
 
     for _ in range(n_boot):
-        pos_means.append(
-            np.mean(np.random.choice(scores_pos, size=sample_size_pos, replace=True))
-        )
-        neg_means.append(
-            np.mean(np.random.choice(scores_neg, size=sample_size_neg, replace=True))
-        )
+        pos_means.append(np.mean(np.random.choice(scores_pos, size=sample_size, replace=True)))
+        neg_means.append(np.mean(np.random.choice(scores_neg, size=sample_size, replace=True)))
 
     mu_pos, sigma_pos = np.mean(pos_means), max(np.std(pos_means), eps)
     mu_neg, sigma_neg = np.mean(neg_means), max(np.std(neg_means), eps)
@@ -172,19 +123,19 @@ def _intersect_threshold_clt(scores_pos, scores_neg, n_boot=200, eps=1e-12):
     low = min(scores_pos.min(), scores_neg.min())
     high = max(scores_pos.max(), scores_neg.max())
 
-    g = lambda x: norm.pdf(x, mu_pos, sigma_pos) - norm.pdf(x, mu_neg, sigma_neg)
+    g = lambda x: (norm.pdf(x, mu_pos, sigma_pos) -
+                   norm.pdf(x, mu_neg, sigma_neg)).item()
 
     if np.sign(g(low)) == np.sign(g(high)):
         raise InterruptedError
 
     tau = optimize.brentq(g, low, high)
-    x_max_pos = mu_pos
-    x_max_neg = mu_neg
-    return tau, x_max_pos, x_max_neg
+
+    return tau, mu_pos, mu_neg
 
 
 def iterate_threshold(
-    X, Y, tau, p=0.2, s=20, i=0, epsilon=1e-3, mode="kde", clt_boot=500, clt_sample=30
+        X, Y, tau, p=0.2, s=20, i=0, epsilon=1e-3, mode="kde", clt_boot=500, clt_sample=30
 ):
     """
     Perform iterative local refinement of the decision threshold around
@@ -330,10 +281,22 @@ def iterate_threshold(
                 tau_new, x_max_pos, x_max_neg = _intersect_threshold(
                     pos_in_win, neg_in_win
                 )
+                if abs(tau_new - tau) < epsilon:
+                    break
+                if len(omega_x) >= len(curr_x):
+                    break
+
             else:
                 tau_new, x_max_pos, x_max_neg = _intersect_threshold_clt(
-                    pos_in_win, neg_in_win, n_boot=clt_boot, sample_size=clt_sample
+                    pos_in_win, neg_in_win,
+                    n_boot=clt_boot,
+                    sample_size=clt_sample
                 )
+                if abs(tau_new - tau) < epsilon:
+                    break
+                if len(omega_x) >= len(curr_x):
+                    break
+
         except InterruptedError:
             break
         except Exception:
@@ -357,7 +320,6 @@ def iterate_threshold(
             )
         )
 
-        # Update for next iteration
         tau = tau_new
         curr_x = omega_x
         curr_y = omega_y
