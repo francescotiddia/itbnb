@@ -61,15 +61,14 @@ target_version = ['py38', 'py39', 'py310']
 preview = true
 exclude = '''
 /(
-    \.eggs         # exclude a few common directories in the
-  | \.git          # root of the project
+    \.eggs         
+  | \.git         
   | \.vscode
 )/
 '''
 force-exclude = "itbnb/_version.py"
 
 [tool.ruff]
-# max line length for black
 line-length = 88
 target-version = "py38"
 exclude=[
@@ -83,20 +82,15 @@ exclude=[
 ]
 
 [tool.ruff.lint]
-# all rules can be found here: https://beta.ruff.rs/docs/rules/
 select = ["E", "F", "W", "I"]
 ignore=[
-    # space before : (needed for how black formats slicing)
     "E203",
-    # do not assign a lambda expression, use a def
     "E731",
-    # do not use variables named 'l', 'O', or 'I'
     "E741",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# It's fine not to put the import at the top of the file in the examples
-# folder.
+
 "examples/*"=["E402"]
 "doc/conf.py"=["E402"]
 "doc/_templates/numpydoc_docstring.py"=["F821", "W292"]
