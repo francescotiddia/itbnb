@@ -37,16 +37,13 @@ Tb-NB addresses this issue by:
 - Designed for use in pipelines and model selection workflows
 
 ---
-
 ## Installation
 
-Clone the repository and install in editable mode:
+Install directly from PyPI:
 
 ```bash
-git clone https://github.com/francescotiddia/itbnb.git
-cd itbnb
-pip install -e .
-````
+pip install itbnb
+```
 
 ---
 
