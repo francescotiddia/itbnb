@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 import numpy as np
 from scipy import optimize
 from scipy.stats import gaussian_kde, norm
@@ -114,8 +115,24 @@ def _intersect_threshold_clt(scores_pos, scores_neg,
     neg_means = []
 
     for _ in range(n_boot):
-        pos_means.append(np.mean(np.random.choice(scores_pos, size=sample_size, replace=True)))
-        neg_means.append(np.mean(np.random.choice(scores_neg, size=sample_size, replace=True)))
+        pos_means.append(
+            np.mean(
+                np.random.choice(
+                    scores_pos,
+                    size=sample_size,
+                    replace=True,
+                )
+            )
+        )
+        neg_means.append(
+            np.mean(
+                np.random.choice(
+                    scores_neg,
+                    size=sample_size,
+                    replace=True,
+                )
+            )
+        )
 
     mu_pos, sigma_pos = np.mean(pos_means), max(np.std(pos_means), eps)
     mu_neg, sigma_neg = np.mean(neg_means), max(np.std(neg_means), eps)
@@ -135,7 +152,16 @@ def _intersect_threshold_clt(scores_pos, scores_neg,
 
 
 def iterate_threshold(
-        X, Y, tau, p=0.2, s=20, i=0, epsilon=1e-3, mode="kde", clt_boot=500, clt_sample=30
+    X,
+    Y,
+    tau,
+    p=0.2,
+    s=20,
+    i=0,
+    epsilon=1e-3,
+    mode="kde",
+    clt_boot=500,
+    clt_sample=30,
 ):
     """
     Perform iterative local refinement of the decision threshold around
